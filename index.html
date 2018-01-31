@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>新年大吉</title>
+  <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+  <script src="vue.js"></script>
+  <script src="layer/layer.js"></script>
+  <style>
+    *{
+      padding: 0;
+      margin: 0;
+    }
+    body {
+      background-color: red;
+    }
+
+    svg {
+      width: 80vh;
+      height: 80vh;
+      max-width: 80vw;
+      max-height: 80vw;
+      display: block;
+      margin: auto;
+      font-family: "楷体", "楷体_GB2312";
+    }
+
+    path {
+      stroke: rgba(255, 0, 0, 0.3);
+      stroke-width: 0.1;
+    }
+
+    input[type="text"] {
+      text-align: center;
+      background-color: #c0b661;
+      margin-top: 100px;
+      display: block;
+      margin: auto;
+      padding: 2px;
+      width: 100%;
+      border: none;
+      position: fixed;
+      left: 0px;
+      bottom: 0px;
+    }
+    #bottom{
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+    }
+    #bottom *{
+      vertical-align: middle;
+    }
+    #bottom table{
+      margin: 0 auto;
+    }
+    #bottom input[type="number"]{
+      width: 60px;
+    }
+    .wBox{
+      width: 110px;
+      height: 140px;
+      float: left;
+      text-align: center;
+      font-size: 25px;
+    }
+    .wImg{
+      margin: 5px;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div>
+      <svg viewBox="0 0 100 100">
+        <!-- <clipPath id="clipCircle">
+          <circle r="10" cx="10" cy="10" fill="blue"/>
+        </clipPath> -->
+        <g id="group" v-bind:transform="groupTransform">
+          <path v-for="(name, index) in names" v-bind:fill="fill(index)" v-bind:d="d(index)"></path>
+          <text v-for="(name, index) in names" v-bind:transform="textTransform(index)" font-size="8" text-anchor="middle" alignment-baseline="central">{{ name }}</text>
+        </g>
+        <g id="static" transform="translate(50,50)">
+          <circle r="10" cx="10" cy="10" transform="translate(-10,-10)" @click="go" style="cursor:pointer"/>
+          <!-- <image v-bind:xlink:href="image" width="20" height="20" v-on:click="go" style="cursor:pointer" clip-path="url(#clipCircle)"transform="translate(-10 -10)">
+          </image> -->
+          <g>
+      </svg>
+    </div>
+    <div id="bottom">
+      <table>
+        <tr>
+          <td>人数</td>
+          <td><input type="number" v-model="count"></td>
+          <td><button @click="clearWinners">删除</button></td>
+          <td><button @click="disarray">打乱</button></td>
+        </tr>
+      </table>
+      <input type="text" v-model="nameString"></input>
+    </div>
+  </div>
+  <script>
+    var app = new Vue({
+      el: "#app",
+      data: {
+        count: 1,
+        RADIUS: 30,
+        rad: 0,
+        nameString: "",
+        status: "stopping",
+        speedRad: 0,
+      },
+      created: function () {
+        this.update();
+      },
+      computed: {
+        names: function () {
+          return this.nameString.split(/,|，/).filter(o => o != "").sort(() => 0.5 - Math.random());
+        },
+        groupTransform: function () {
+          return `translate(50 50) rotate(${this.deg + ((this.count-1)/this.names.length) * -180})`;
+        },
+        btnText: function () {
+          return {
+            'stopping': '转',
+            'running': '停'
+          }[this.status];
+        },
+        deg: function () {
+          return this.rad * 180 / Math.PI;
+        },
+        name: function () {
+          var choosed = "";
+          var distMin = Math.PI * 2;
+          this.names.forEach((name, index) => {
+            const rad = this.radItemDynamic(index);
+            const dist = Math.min(rad, Math.PI * 2 - rad);
+            if (dist < distMin) {
+              distMin = dist;
+              choosed = name;
+            }
+          });
+
+          return choosed;
+        },
+        image: function () {
+          return `img/${this.name}.jpg`;
+        },
+        radRange: function () {
+          return Math.PI * 2 / this.names.length;
+        },
+        winners: function () {
+          return this.names.filter((n, index) => {
+            const {
+              radLeft,
+              radRight
+            } = this.staticInfo(index);
+            if ((this.rad + radRight) % (2 * Math.PI) < this.count * this.radRange) {
+              return true;
+            } else
+              return false;
+          })
+        },
+      },
+      methods: {
+        disarray: function () {
+          this.nameString = this.nameString.split(/,|，/).filter(o => o != "").sort(() => 0.5 - Math.random()).join(',');
+        },
+        clearWinners: function () {
+          this.winners.forEach((w) => {
+            this.nameString = this.nameString.replace(w, '').replace(/,,|，，|,，|，,/, ',' );
+          })
+        },
+        d: function (index) {
+          const {
+            radLeft,
+            radRight
+          } = this.staticInfo(index);
+          var xL = Math.sin(radLeft) * this.RADIUS;
+          var yL = -Math.cos(radLeft) * this.RADIUS;
+          var xR = Math.sin(radRight) * this.RADIUS;
+          var yR = -Math.cos(radRight) * this.RADIUS;
+
+          return `M0 0 L${xL} ${yL} A${this.RADIUS} ${this.RADIUS} 0 0 1 ${xR} ${yR} z`;
+        },
+        textTransform: function (index) {
+          const {
+            radCenter
+          } = this.staticInfo(index);
+          const x = Math.sin(radCenter) * (this.RADIUS + 8);
+          const y = -Math.cos(radCenter) * (this.RADIUS + 8);
+          const deg = radCenter * 180 / Math.PI;
+          return `translate(${x} ${y}) rotate(${deg})`;
+        },
+        fill: function (index) {
+          const {
+            radLeft,
+            radRight
+          } = this.staticInfo(index);
+          if ((this.rad + radRight) % (2 * Math.PI) < this.count * this.radRange) {
+            if (this.speedRad == 0.0)
+              return "yellow";
+            else
+              return "#61C0BF";
+          } else
+            return "#c0b661";
+        },
+        radItem: function (index) {
+          return index * this.radRange;
+        },
+        radItemDynamic: function (index) {
+          return (this.rad + this.radItem(index)) % (Math.PI * 2);
+        },
+        staticInfo: function (index) {
+          var radCenter = this.radItem(index);
+          var radLeft = radCenter - this.radRange / 2;
+          var radRight = radCenter + this.radRange / 2;
+
+          return {
+            radCenter,
+            radLeft,
+            radRight,
+          };
+        },
+        go: function () {
+          if (this.status == "stopping") {
+            this.status = "running";
+            this.speedRad = 0.2;
+          } else if (this.status == "running") {
+            this.status = "stopping";
+          }
+        },
+        update: function () {
+          if (this.speedRad != 0.0) {
+            this.rad = (this.rad + this.speedRad) % (Math.PI * 2);
+          }
+
+          if (this.status == "stopping") {
+            this.speedRad -= Math.max(this.speedRad * 0.005, 0.000005); /////////////////////////////////////////////////////////////////////
+            if (this.speedRad < 0.000005) {
+              this.status = "stopping";
+              this.speedRad = 0.0;
+            }
+          }
+          requestAnimationFrame(this.update);
+        },
+      },
+      watch: {
+        speedRad: function (val) {
+          var that = this;
+          if (val === 0.0) {
+            layer.open({
+              type: 0,
+              title: false,
+              closeBtn: 0,
+              shadeClose: true,
+              area: ['40vw', '40vh'],
+              content: that.winners.map(w => `
+                <div class="wBox">
+                  <img src="img/${w}.jpg" class="wImg">
+                  ${w}
+                </div>
+              `).join('')
+            });
+          }
+        },
+      },
+    });
+    app.nameString = "东,亮,任,冯,勋,勍,君,奋,娟,婷,平,攀,政,明,朱,权,洋,潇,潮,牟,瑜,真,磊,秋,翅,聪,英,莹,豪,鹏,麟,龙";
+
+  </script>
+</body>
+
+</html>

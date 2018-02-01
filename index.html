@@ -71,6 +71,9 @@
       width: 100px;
       height: 100px;
     }
+    .layer{
+      background-color: #d9ca4a;
+    }
   </style>
 </head>
 
@@ -78,17 +81,16 @@
   <div id="app">
     <div>
       <svg viewBox="0 0 100 100">
-        <!-- <clipPath id="clipCircle">
+        <clipPath id="clipCircle">
           <circle r="10" cx="10" cy="10" fill="blue"/>
-        </clipPath> -->
+        </clipPath>
         <g id="group" v-bind:transform="groupTransform">
           <path v-for="(name, index) in names" v-bind:fill="fill(index)" v-bind:d="d(index)"></path>
           <text v-for="(name, index) in names" v-bind:transform="textTransform(index)" font-size="8" text-anchor="middle" alignment-baseline="central">{{ name }}</text>
         </g>
         <g id="static" transform="translate(50,50)">
-          <circle r="10" cx="10" cy="10" transform="translate(-10,-10)" @click="go" style="cursor:pointer"/>
-          <!-- <image v-bind:xlink:href="image" width="20" height="20" v-on:click="go" style="cursor:pointer" clip-path="url(#clipCircle)"transform="translate(-10 -10)">
-          </image> -->
+          <image v-bind:xlink:href="image" width="20" height="20" v-on:click="go" style="cursor:pointer" clip-path="url(#clipCircle)"transform="translate(-10 -10)">
+          </image>
           <g>
       </svg>
     </div>
@@ -98,7 +100,7 @@
           <td>人数</td>
           <td><input type="number" v-model="count"></td>
           <td><button @click="clearWinners">删除</button></td>
-          <td><button @click="disarray">打乱</button></td>
+          <td><button @click="disarray">重排</button></td>
         </tr>
       </table>
       <input type="text" v-model="nameString"></input>
@@ -202,7 +204,7 @@
             radLeft,
             radRight
           } = this.staticInfo(index);
-          if ((this.rad + radRight) % (2 * Math.PI) < this.count * this.radRange) {
+          if ((this.rad + radRight) % (2 * Math.PI) < this.count * this.radRange && this.status == "stopping") {
             if (this.speedRad == 0.0)
               return "yellow";
             else
@@ -258,8 +260,9 @@
               type: 0,
               title: false,
               closeBtn: 0,
+              skin: 'layer',
               shadeClose: true,
-              area: ['40vw', '40vh'],
+              area: ['60vw', '60vh'],
               content: that.winners.map(w => `
                 <div class="wBox">
                   <img src="img/${w}.jpg" class="wImg">

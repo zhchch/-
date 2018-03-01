@@ -86,7 +86,7 @@
         </clipPath>
         <g id="group" v-bind:transform="groupTransform">
           <path v-for="(name, index) in names" v-bind:fill="fill(index)" v-bind:d="d(index)"></path>
-          <text v-for="(name, index) in names" v-bind:transform="textTransform(index)" font-size="8" text-anchor="middle" alignment-baseline="central">{{ name }}</text>
+          <text v-for="(name, index) in names" v-bind:transform="textTransform(index)" font-size="4" text-anchor="middle" alignment-baseline="central">{{ name }}</text>
         </g>
         <g id="static" transform="translate(50,50)">
           <image v-bind:xlink:href="image" width="20" height="20" v-on:click="go" style="cursor:pointer" clip-path="url(#clipCircle)"transform="translate(-10 -10)">
@@ -111,7 +111,7 @@
       el: "#app",
       data: {
         count: 1,
-        RADIUS: 30,
+        RADIUS: 40,
         rad: 0,
         nameString: "",
         status: "stopping",
@@ -151,7 +151,7 @@
           return choosed;
         },
         image: function () {
-          return `img/${this.name}.jpg`;
+          return `timg.jpg`;
         },
         radRange: function () {
           return Math.PI * 2 / this.names.length;
@@ -243,7 +243,7 @@
           }
 
           if (this.status == "stopping") {
-            this.speedRad -= Math.max(this.speedRad * 0.005, 0.000005); /////////////////////////////////////////////////////////////////////
+            this.speedRad -= Math.max(this.speedRad * 0.05, 0.000005); /////////////////////////////////////////////////////////////////////
             if (this.speedRad < 0.000005) {
               this.status = "stopping";
               this.speedRad = 0.0;
@@ -265,7 +265,7 @@
               area: ['60vw', '60vh'],
               content: that.winners.map(w => `
                 <div class="wBox">
-                  <img src="img/${w}.jpg" class="wImg">
+                  <img src="timg.jpg" class="wImg">
                   ${w}
                 </div>
               `).join('')
@@ -274,7 +274,7 @@
         },
       },
     });
-    app.nameString = "东,亮,任,冯,勋,勍,君,奋,娟,婷,平,攀,政,明,朱,权,洋,潇,潮,牟,瑜,真,磊,黄,翅,聪,英,莹,豪,鹏,麟,龙,辉";
+    app.nameString = `${new Array(11).fill(100).join(',')},${new Array(13).fill(200).join(',')},${new Array(8).fill(300).join(',')}`;
 
   </script>
 </body>
